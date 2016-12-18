@@ -102,7 +102,7 @@ ggplot(idl4.lm) + geom_line(aes(yod, .fitted/365)) + theme_bw() + geom_point(aes
     Age.days./365)) + labs(x = "year of death", y = "maximum age at death")
 ```
 
-![](../../output/idl-lm-1.png)<!-- -->
+![](idl-lm-1.png)<!-- -->
 
 ### Linear regression with breakpoints
 We use the _segmented_ package to model linear regression with breakpoints. 
@@ -124,7 +124,7 @@ ggplot(idl4.sm) + geom_line(aes(yod, .fitted/365)) + theme_bw() + geom_point(aes
     Age.days./365)) + labs(x = "year of death", y = "maximum age at death")
 ```
 
-![](../../output/ldl-seg-1.png)<!-- -->
+![](ldl-seg-1.png)<!-- -->
 
 For comparison, here is the complete n = 668 dataset with the default LOESS smoothing fitted by _geom\_smooth_. Note that the confidence interval around the later values allows for a slight upward trend.
 
@@ -134,7 +134,7 @@ ggplot(idl) + theme_bw() + geom_point(aes(yod, Age.days./365)) + labs(x = "year 
     y = "maximum age at death") + geom_smooth(aes(yod, Age.days./365))
 ```
 
-![](../../output/loess-1.png)<!-- -->
+![](loess-1.png)<!-- -->
 
 ## Conclusions
 * It is possible to model the IDL data using piecewise regression
