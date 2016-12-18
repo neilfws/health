@@ -1,0 +1,6 @@
+Id;Age(years);Age(days since last birthday);Age(days);Sex;Country of birth;Country of death;Date of birth;Date of death;Validation
+1;112;186;41093;F;BEL;BEL;03/06/1890;06/12/2002;B
+2;111;82;40624;F;BEL;BEL;30/01/1882;22/04/1993;B
+3;110;32;40208;F;BEL;BEL;10/02/1889;14/03/1999;B
+4;110;89;40265;F;BEL;BEL;27/10/1888;24/01/1999;B
+5;110;138;40315;F;BEL;BEL;26/06/1887;11/11/1997;B
