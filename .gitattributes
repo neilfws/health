@@ -1,0 +1,2 @@
+*.Rmd linguist-language=R
+longevity/output/*.html linguist-documentation
