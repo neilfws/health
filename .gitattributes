@@ -1,2 +1,4 @@
 *.Rmd linguist-language=R
+*.Rnw linguist-language=R
 longevity/output/*.html linguist-documentation
+influenza/code/R/*.html linguist-documentation
