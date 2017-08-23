@@ -17,3 +17,7 @@ This is clean, but lacks in quick comparison across all years.
 This allows "vertical comparison" by month, but is a little "noisy on the eyes".
 
 ![](influenza_cases_files/figure-html/plot-cases-2-1.png)<!-- -->
+
+How about conversion to date and plot a continuous timeline?
+
+![](influenza_cases_files/figure-html/plot-cases-3-1.png)<!-- -->

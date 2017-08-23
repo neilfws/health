@@ -62,3 +62,20 @@ flu %>%
     labs(title = "Annual Australian Influenza Statistics",
          subtitle = "Source: Immunisation Coalition")
 ```
+
+How about conversion to date and plot a continuous timeline?
+
+```{r plot-cases-3}
+flu %>% 
+  select(-TOTALS) %>% 
+  gather(month, cases, -YEAR) %>% 
+  mutate(Date = paste(YEAR, month, "1", sep = "-")) %>% 
+  mutate(Date = as.Date(Date, "%Y-%B-%d")) %>% 
+  ggplot(aes(Date, cases)) + 
+    geom_line(group = 1, color = "#008acc") + 
+    theme_bw() + 
+    scale_x_date(date_breaks = "6 months") + 
+    labs(title = "Annual Australian Influenza Statistics",
+         subtitle = "Source: Immunisation Coalition") +
+    theme(axis.text.x = element_text(size = 6))
+```
