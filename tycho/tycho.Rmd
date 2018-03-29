@@ -1,0 +1,146 @@
+---
+title: "Visualization of Project Tycho data using ggplot2"
+author: "Neil Saunders"
+date: "`r Sys.time()`"
+output:
+  github_document:
+    toc: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      message = FALSE, 
+                      warning = FALSE)
+library(tidyverse)
+library(grid)
+library(pander)
+
+theme_set(theme_bw())
+
+# read and aggregate polio data
+polio <- read_csv("data/ProjectTycho_Level1_v1.0.0.csv") %>%
+  filter(disease == "POLIO", loc_type == "STATE") %>%
+  select(epi_week, state, incidence_per_100000) %>%
+  mutate(year = as.numeric(substring(epi_week, 1, 4))) %>%
+  group_by(year, state) %>%
+  summarise(incidence = sum(incidence_per_100000, na.rm = TRUE))
+```
+
+# Introduction
+This document explores the visualization of public health data obtained from [Project Tycho](https://www.tycho.pitt.edu/). It's inspired by [a blog post](https://biomickwatson.wordpress.com/2015/04/09/recreating-a-famous-visualisation/) from Mick Watson, describing the use of R base graphics to recreate [visualizations of vaccine effectiveness](http://graphics.wsj.com/infectious-diseases-and-vaccines/) published by the Wall Street Journal. In this document, we try to generate something similar using ggplot2. This has also been explored [by Benjamin Moore](https://benjaminlmoore.wordpress.com/2015/04/09/recreating-the-vaccination-heatmaps-in-r/). I also wrote [a blog post](https://nsaunders.wordpress.com/2015/04/15/project-tycho-ggplot2-and-the-shameless-stealing-of-blog-ideas/) on the topic.
+
+# Functions
+## Obtaining and reading the data
+Unfortunately Project Tycho data are not directly available from the Web; users must register, login, browse the data and download a CSV file. The procedure is explained in Mick's blog post. We load the required packages, then read the CSV file.
+
+```{r}
+polio %>%
+  glimpse()
+```
+
+## Normalizing to cases per 100 000 population
+Originally we had code here to download historical US state population estimates and normalise disease cases. However, Benjamin pointed out in his blog post that Project Tycho Level 1 data are already normalised by population.
+
+
+# Visualization
+
+## Using geom_tile()
+We can get a grid that resembles the WSJ plots using _geom\_tile()_.
+
+```{r fig.height=7, fig.width=9}
+polio %>%
+  ggplot(aes(year, state)) + 
+    geom_tile(aes(fill = incidence)) + 
+    scale_fill_continuous(low = "floralwhite", 
+                          high = "red",
+                          name = "incidence/100000") + 
+    theme(panel.border = element_blank(), 
+          panel.margin = unit(1, "mm"), 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank()) + 
+    geom_vline(xintercept = 1955) + 
+    scale_x_continuous(breaks = seq(min(polio$year), max(polio$year), 5)) + 
+    labs(x = "Year", 
+         y = "State", 
+         title = "Poliomyelitis 1928 - 1968") +
+    coord_equal()
+```
+
+## Using geom_tile() + a "WSJ-like" colour palette
+As Mick noted in his blog post, the WSJ fiddled with bin sizes and break points to generate more yellow/orange/red for pre-vaccine years. We haven't explored that in this document, so our chart has the same colour scheme but looks a little different.
+
+```{r fig.height=7, fig.width=9}
+cols <- c(colorRampPalette(c("white", "cornflowerblue"))(10), colorRampPalette(c("yellow", "red"))(30))
+ 
+polio %>%
+  ggplot(aes(year, state)) + 
+    geom_tile(aes(fill = incidence), color = "white") +
+    scale_fill_gradientn(colours = cols,
+                         name = "incidence/100000") + 
+    theme(panel.border = element_blank(), 
+          panel.margin = unit(1, "mm"), 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank()) + 
+    geom_vline(xintercept = 1955) + 
+    scale_x_continuous(breaks = seq(min(polio$year), max(polio$year), 5)) + 
+    labs(x = "Year", 
+         y = "State", 
+         title = "Poliomyelitis 1928 - 1968") +
+    coord_equal()
+```
+
+# Summary
+* Not _too much_ work for some quite attractive output, thanks to great R packages; Hadley, love your work
+* As ever, the main challenge is getting the raw data into shape
+
+The WSJ plots used the [Highcharts](http://www.highcharts.com/) Javascript plotting library, so it should be possible to create something very similar in R using the [rCharts package](https://github.com/ramnathv/rCharts) or [highcharter](http://jkunst.com/highcharter/) packages.
+
+```{r eval=FALSE}
+# Old code no longer used
+getPopData <- function(years = "0009", skip1 = 23, skip2 = 81, rows = 49, names = 1900:1909, keep = 1:11) {
+  u  <- paste("http://www.census.gov/popest/data/state/asrh/1980s/tables/st", years, "ts.txt", sep = "")
+  p1 <- read.table(u, skip = skip1, nrows = rows, header = F, stringsAsFactors = FALSE)
+  p2 <- read.table(u, skip = skip2, nrows = rows, header = F, stringsAsFactors = FALSE)
+  p12 <- join(p1, p2, by = "V1")
+  p12 <- p12[, keep]
+  colnames(p12) <- c("state", names)
+  # 1900-1970 are in thousands with commas
+  if(as.numeric(substring(years, 1, 1)) < 7) {
+    p12[, 2:11] <- sapply(p12[, 2:11], function(x) gsub(",", "", x))
+    p12[, 2:11] <- sapply(p12[, 2:11], as.numeric)
+    p12[, 2:11] <- sapply(p12[, 2:11], function(x) 1000*x)
+  }
+  return(p12)
+}
+
+popn <- list(p1900 = getPopData(),
+             p1910 = getPopData(years = "1019", names = 1910:1919),
+             p1920 = getPopData(years = "2029", names = 1920:1929),
+             p1930 = getPopData(years = "3039", names = 1930:1939),
+             p1940 = getPopData(years = "4049", skip1 = 21, skip2 = 79, , names = 1940:1949),
+             p1950 = getPopData(years = "5060", skip1 = 27, skip2 = 92, rows = 51, names = 1950:1959, keep = c(1, 3:7, 9:13)),
+             p1960 = getPopData(years = "6070", skip1 = 24, skip2 = 86, rows = 51, names = 1960:1969, keep = c(1, 3:7, 9:13)),
+             p1970 = getPopData(years = "7080", skip1 = 14, skip2 = 67, rows = 51, names = 1970:1979, keep = c(2:8, 11:14)),
+             p1980 = getPopData(years = "8090", skip1 = 11, skip2 = 70, rows = 51, names = 1980:1990, keep = 1:12))
+ 
+popn.df <- join_all(popn, by = "state", type = "full")
+
+# 1.3 Joining disease and population data
+# First we create a data frame containing state names and abbreviations, then match the abbreviations to the polio data.
+
+statenames <- toupper(state.name)
+statenames <- gsub(" ", ".", statenames)
+states <- data.frame(sname = statenames, sabb = state.abb)
+ 
+m <- match(polio$state, states$sname)
+polio$abb <- states[m, "sabb"]
+
+# Now we can melt the population data, join to the polio data on state abbreviation and calculate cases per 100 000 people.
+
+popn.m <- melt(popn.df)
+colnames(popn.m) <- c("abb", "YEAR", "pop")
+popn.m$YEAR <- as.numeric(as.character(popn.m$YEAR))
+polio.pop <- join(polio, popn.m, by = c("YEAR", "abb"))
+polio.pop$cases <- (100000 / polio.pop$pop) * polio.pop$value
+ 
+head(polio.pop)
+```
