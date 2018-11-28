@@ -1,7 +1,7 @@
 Pollution in Australia by Postcode
 ================
 Neil Saunders
-compiled 2018-11-28 22:28:32
+compiled 2018-11-28 22:57:10
 
 -   [Introduction](#introduction)
     -   [Getting the pollution data](#getting-the-pollution-data)
@@ -191,7 +191,8 @@ auspost_f %>%
     coord_map() +
     scale_fill_viridis_c() +
     theme(axis.title = element_blank(),
-          axis.text = element_blank()) +
+          axis.text = element_blank(),
+          panel.grid = element_blank()) +
     labs(title = "Total emissions in the air (kg) by Sydney postcode")
 ```
 
@@ -210,7 +211,8 @@ auspost_f %>%
     coord_map() +
     scale_fill_viridis_d() +
     theme(axis.title = element_blank(),
-          axis.text = element_blank()) +
+          axis.text = element_blank(),
+          panel.grid = element_blank()) +
     labs(title = "Level of pollution by Melbourne postcode")
 ```
 
@@ -229,7 +231,8 @@ auspost_f %>%
     coord_map() +
     scale_fill_viridis_c() +
     theme(axis.title = element_blank(),
-          axis.text = element_blank()) +
+          axis.text = element_blank(),
+          panel.grid = element_blank()) +
     labs(title = "Number of polluting facilities by Brisbane postcode")
 ```
 
