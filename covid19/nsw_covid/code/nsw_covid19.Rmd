@@ -3,7 +3,10 @@ title: "Mapping NSW COVID-19 cases"
 author: "Neil Saunders"
 date: "compiled `r Sys.time()`"
 output:
-  github_document
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r setup, include=FALSE}
