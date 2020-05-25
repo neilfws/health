@@ -12,13 +12,6 @@ runtime: shiny
 library(waffle)
 library(binom)
 library(kableExtra)
-
-format_ci <- function(ci) {
-  lower <- sprintf("%.03f", ci$lower)
-  upper <- sprintf("%.03f", ci$upper)
-  
-  paste(lower, upper, sep = " - ")
-}
 ```
 
 Column {.sidebar}
@@ -42,6 +35,14 @@ Row
 
 ```{r}
 renderUI({
+  
+  format_ci <- function(ci) {
+  lower <- sprintf("%.03f", ci$lower)
+  upper <- sprintf("%.03f", ci$upper)
+  
+  paste(lower, upper, sep = " - ")
+}
+
   tp <- round(input$prev * 1000 * input$sens)
   fn <- round(input$prev * 1000 - tp)
   tn <- round((1000 - input$prev * 1000) * input$spec)
