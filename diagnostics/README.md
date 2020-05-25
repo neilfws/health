@@ -3,4 +3,4 @@ Interactive calculator to explore the effect of varying sensitivity and specific
 
 Uses R Shiny + flexdashboard.
 
-Demo hosted (for now) at [ShinyApps](https://neilfws.shinyapps.io/diagnostic_test_calculator/).
+Demo hosted (for now) at [ShinyApps](https://neilfws.shinyapps.io/diagnostic_test_calculator/){target="_blank"}.
