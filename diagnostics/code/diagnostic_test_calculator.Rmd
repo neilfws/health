@@ -1,0 +1,157 @@
+---
+title: "Diagnostic Test Accuracy"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: fill
+    orientation: rows
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+# load data in 'global' chunk so it can be shared by all users of the dashboard
+library(waffle)
+library(binom)
+library(kableExtra)
+
+format_ci <- function(ci) {
+  lower <- sprintf("%.03f", ci$lower)
+  upper <- sprintf("%.03f", ci$upper)
+  
+  paste(lower, upper, sep = " - ")
+}
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+sliderInput("prev", label = "Prevalence",
+            min = 0, max = 1, value = 0.05, step = 0.01)
+
+sliderInput("sens", label = "Sensitivity:",
+            min = 0, max = 1, value = 0.95, step = 0.01)
+
+sliderInput("spec", label = "Specificity:",
+            min = 0, max = 1, value = 0.95, step = 0.01)
+```
+
+Row
+-----------------------------------------------------------------------
+
+### **Statistics**
+
+```{r}
+renderUI({
+  tp <- round(input$prev * 1000 * input$sens)
+  fn <- round(input$prev * 1000 - tp)
+  tn <- round((1000 - input$prev * 1000) * input$spec)
+  fp <- round((1000 - input$prev * 1000) - tn)
+  
+  sens_ci <- binom.confint(tp, tp + fn, methods = "exact")
+  spec_ci <- binom.confint(tn, tn + fp, methods = "exact")
+  acc_ci  <- binom.confint(tp + tn, tp + fp + tn + fn, methods = "exact")
+  
+  ppv_ci <- binom.confint(tp, tp + fp, methods = "logit")
+  npv_ci <- binom.confint(tn, tn + fn, methods = "logit")
+  
+  ppv <- (input$prev * input$sens) / ((input$sens * input$prev) +  (1 - input$spec) * (1 - input$prev))
+  npv <- input$spec * (1 - input$prev) / ((1 - input$sens) * input$prev + input$spec * (1 - input$prev))
+  plr <- input$sens / (1 - input$spec)
+  nlr <- (1 - input$sens) / input$spec
+  acc <- input$sens * input$prev + input$spec * (1 - input$prev)
+  
+
+  data01 <- data.frame(Statistic = c("Prevalence", "Sensitivity", "Specificity", "Positive Predictive Value", 
+                                     "Negative Predictive Value", "Positive Likelihood Ratio", "Negative Likelihood Ratio", "Accuracy"),
+                     Definition = c("percentage of population with the disease", 
+                                    "probability that a test result will be positive when the disease is present", 
+                                    "probability that a test result will be negative when the disease is not present", 
+                                    "probability that the disease is present when the test is positive", 
+                                    "probability that the disease is not present when the test is negative",
+                                    "probability of a positive test given presence of disease / probability of a positive test given absence of disease", 
+                                    "probability of a negative test given presence of disease / probability of a negative test given absence of disease", 
+                                    "overall probability that a patient is correctly classified"),
+                     Value = c(input$prev, 
+                               input$sens, 
+                               input$spec, 
+                               sprintf("%1.3g", c(ppv, npv, plr, nlr, acc))),
+                     `CI (95 %)` = c(NA, 
+                            format_ci(sens_ci), 
+                            format_ci(spec_ci), 
+                            format_ci(ppv_ci), 
+                            format_ci(npv_ci), 
+                            paste(
+                              sprintf("%.03f", exp(log(plr) - 1.96 * sqrt(1/tp - 1/(tp + fn) + 1/fp - 1/(fp + tn)))),
+                              sprintf("%.03f", exp(log(plr) + 1.96 * sqrt(1/tp - 1/(tp + fn) + 1/fp - 1/(fp + tn)))),
+                              sep = " - "),
+                            paste(
+                              sprintf("%.03f", exp(log(nlr) - 1.96 * sqrt(1/fn - 1/(fn + tp) + 1/tn - 1/(fp + tn)))),
+                              sprintf("%.03f", exp(log(nlr) + 1.96 * sqrt(1/fn - 1/(fn + tp) + 1/tn - 1/(fp + tn)))),
+                              sep = " - "),
+                            format_ci(acc_ci)))
+  
+  data01 %>% 
+    kable(col.names = c("Statistic", "Definition", "Value", "CI (95%)")) %>% 
+    kable_styling(bootstrap_options = c("striped", "condensed")) %>% 
+    HTML()
+})
+
+```
+
+
+### **Test Results**
+
+```{r}
+renderPlot({
+  tp <- round(input$prev * 1000 * input$sens)
+  fn <- round(input$prev * 1000 - tp)
+  tn <- round((1000 - input$prev * 1000) * input$spec)
+  fp <- round((1000 - input$prev * 1000) - tn)
+  
+  waffle(c("True Negative" = tn, "True Positive" = tp, "False Negative" = fn, "False Positive" = fp), 
+         rows = 25,
+         legend_pos = "top",
+         size = 1,
+         title = "1000 people")
+})
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+### **Notes**
+
+Given a disease prevalence, test sensitivity and test specificity, calculate a range of statistical measures and visualise the results.
+
+**Confidence Intervals**
+
+CI for sensitivity, specificity and accuracy is obtained from R `binom::binom.confint` using the exact (Pearson-Klopper) method.
+
+CI for positive and negative predictive values is obtained from R `binom::binom.confint` using the logit method.
+
+CI for postive and negative likelihood ratios is calculated using Altman's log method. See [this page](https://www2.ccrb.cuhk.edu.hk/stat/confidence%20interval/Diagnostic%20Statistic.htm) for the formulas.
+
+**Resources**
+
+This tool is based on the following resources.
+
+1. [MEDCALC Diagnostic test evaluation calculator](https://www.medcalc.org/calc/diagnostic_test.php){target="_blank"}
+1. [Diagnostic Test Calculator](http://araw.mede.uic.edu/cgi-bin/testcalc.pl){target="_blank"}
+1. [C.I. Calculator: Diagnostic Statistics](https://www2.ccrb.cuhk.edu.hk/stat/confidence%20interval/Diagnostic%20Statistic.htm){target="_blank"}
+
+
+### **True Values**
+
+```{r}
+renderPlot({
+  tp <- round(input$prev * 1000)
+  tn <- round(1000 - input$prev * 1000)
+  
+  waffle(c("True Negative" = tn, "True Positive" = tp), 
+         rows = 25,
+         legend_pos = "top",
+         size = 1,
+         title = "1000 people")
+})
+```
