@@ -141,7 +141,7 @@ This tool is based on the following resources.
 1. [Diagnostic Test Calculator](http://araw.mede.uic.edu/cgi-bin/testcalc.pl){target="_blank"}
 1. [C.I. Calculator: Diagnostic Statistics](https://www2.ccrb.cuhk.edu.hk/stat/confidence%20interval/Diagnostic%20Statistic.htm){target="_blank"}
 
-For a clear, simple explanation of diagnostic test statistics try [False Positives and False Negatives](https://www.mathsisfun.com/data/probability-false-negatives-positives.html).
+For a clear, simple explanation of diagnostic test statistics try [False Positives and False Negatives](https://www.mathsisfun.com/data/probability-false-negatives-positives.html){target="_blank"}.
 
 
 ### **True Values**
