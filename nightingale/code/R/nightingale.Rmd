@@ -12,14 +12,6 @@ output:
 always_allow_html: true
 ---
 
-<style type="text/css">
-.main-container {
-  max-width: 80%;
-  margin-left: auto;
-  margin-right: auto;
-}
-</style>
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
                       message = FALSE,

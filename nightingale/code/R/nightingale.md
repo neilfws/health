@@ -1,7 +1,7 @@
 Nightingale’s Rose Charts
 ================
 Neil Saunders
-compiled 2021-03-16 20:40:38
+compiled 2021-03-16 21:26:13
 
 -   [Summary](#summary)
 -   [The data](#the-data)
@@ -11,14 +11,6 @@ compiled 2021-03-16 20:40:38
     -   [Column chart](#column-chart)
     -   [Line chart](#line-chart)
 -   [Conclusions](#conclusions)
-
-<style type="text/css">
-.main-container {
-  max-width: 80%;
-  margin-left: auto;
-  margin-right: auto;
-}
-</style>
 
 # Summary
 
