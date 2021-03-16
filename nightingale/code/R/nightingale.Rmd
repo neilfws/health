@@ -1,0 +1,152 @@
+---
+title: "Nightingale's Rose Charts"
+author: "Neil Saunders"
+date: "compiled `r Sys.time()`"
+output:
+  github_document:
+    toc: yes
+  html_document: 
+    keep_md: yes
+    number_sections: yes
+    toc: yes
+always_allow_html: true
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      fig.path = "figures/")
+library(tidyverse)
+library(HistData)
+library(knitr)
+library(kableExtra)
+
+theme_set(theme_bw())
+```
+
+
+# Summary
+A brief exploration of Florence Nightingale's Crimean War dataset, inspired by "Florence Nightingale: Data Viz Pioneer", an episode of _Cautionary Tales_ [premiered by 99% Invisible](https://99percentinvisible.org/episode/florence-nightingale-data-viz-pioneer/). 
+
+# The data
+We can get the dataset `Nightingale` from the R package [histData](https://cran.r-project.org/web/packages/HistData/index.html).
+
+It's quite small (24 rows) and looks like this:
+
+```{r view-histdata}
+Nightingale %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "condensed"), font_size = 10)
+```
+
+# Reshaping
+The dataset is not tidy.
+
+- each cause has its own column, rather than columns for cause + value
+- columns are a mixture of rates and absolute values
+
+We can select the rate columns and use `pivot_longer` to convert to long format.
+
+```{r tidy-dataset}
+Nightingale %>% 
+  select(Date, Month, Year, contains("rate")) %>% 
+  pivot_longer(cols = 4:6, names_to = "Cause", values_to = "Rate") %>% 
+  mutate(Cause = gsub(".rate", "", Cause)) %>% 
+  head() %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "condensed"), font_size = 10)
+```
+
+# Charts
+
+The help page, `?Nightingale` provides some R code to generate polar area and line charts but it's somewhat dated and cumbersome. Let's give it the tidyverse treatment.
+
+## The "rose chart"
+The "rose chart", also called (incorrectly) a Coxcomb chart, or polar area chart, is a bar chart projected onto polar coordinates.
+
+We can generate something very similar to Nightingale's original chart like this:
+
+```{r rose-chart}
+Nightingale %>% 
+  select(Date, Month, Year, contains("rate")) %>% 
+  pivot_longer(cols = 4:6, names_to = "Cause", values_to = "Rate") %>% 
+  mutate(Cause = gsub(".rate", "", Cause),
+         period = ifelse(Date <= as.Date("1855-03-01"), "April 1854 to March 1855", "April 1855 to March 1856"),
+         Month = fct_relevel(Month, "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun")) %>% 
+  ggplot(aes(Month, Rate)) + 
+  geom_col(aes(fill = Cause), width = 1, position = "identity") + 
+  coord_polar() + 
+  facet_wrap(~period) +
+  scale_fill_manual(values = c("skyblue3", "grey30", "firebrick")) +
+  scale_y_sqrt() +
+  theme_void() +
+  theme(axis.text.x = element_text(size = 9),
+        strip.text = element_text(size = 11),
+        legend.position = "bottom",
+        plot.background = element_rect(fill = alpha("cornsilk", 0.5)),
+        plot.margin = unit(c(10, 10, 10, 10), "pt"),
+        plot.title = element_text(vjust = 5)) +
+  ggtitle("Diagram of the Causes of Mortality in the Army in the East")
+```
+
+## Column chart
+We can't simply remove the polar coordinates, as this will place some months in the wrong position on the basic column chart. So now we use `Date` on the x-axis.
+
+We can also indicate the period before the arrival of the Sanitary Commission using grey shading.
+
+```{r column-chart}
+Nightingale %>% 
+  select(Date, Month, Year, contains("rate")) %>% 
+  pivot_longer(cols = 4:6, names_to = "Cause", values_to = "Rate") %>% 
+  mutate(Cause = gsub(".rate", "", Cause)) %>% 
+  ggplot(aes(Date, Rate)) + 
+  geom_rect(xmin = as.numeric(as.Date("1854-04-01")), xmax = as.numeric(as.Date("1855-03-01")), ymin = 0, ymax = Inf, fill = "grey90") +
+  geom_col(aes(fill = Cause)) + 
+  scale_fill_manual(values = c("skyblue3", "grey30", "firebrick")) +
+  theme_void() +
+  theme(axis.text.x = element_text(size = 9),
+        strip.text = element_text(size = 11),
+        legend.position = "bottom",
+        plot.background = element_rect(fill = alpha("cornsilk", 0.5)),
+        plot.margin = unit(c(10, 10, 10, 10), "pt"),
+        plot.title = element_text(vjust = 5)) +
+  scale_x_date(date_labels = "%b %Y") +
+  ggtitle("Diagram of the Causes of Mortality in the Army in the East")
+```
+
+## Line chart
+
+We can also show the data as a line chart.
+
+```{r line-chart}
+Nightingale %>% 
+    select(Date, Month, Year, contains("rate")) %>% 
+    pivot_longer(cols = 4:6, names_to = "Cause", values_to = "Rate") %>% 
+    mutate(Cause = gsub(".rate", "", Cause)) %>% 
+    ggplot(aes(Date, Rate)) + 
+    geom_line(aes(color = Cause)) +
+    geom_vline(xintercept = as.numeric(as.Date("1855-03-01")), linetype = "dashed") +
+    scale_color_manual(values = c("skyblue3", "grey30", "firebrick")) +
+    theme_void() +
+    theme(axis.text.x = element_text(size = 9),
+          strip.text = element_text(size = 11),
+          legend.position = "bottom",
+          plot.background = element_rect(fill = alpha("cornsilk", 0.5)),
+          plot.margin = unit(c(10, 10, 10, 10), "pt"),
+        plot.title = element_text(vjust = 5)) +
+    scale_x_date(date_labels = "%b %Y") +
+  ggtitle("Diagram of the Causes of Mortality in the Army in the East")
+```
+
+# Conclusions
+The _Cautionary Tales_ podcast episode concludes that deaths from disease were falling before the arrival of the Sanitary Commission, and that this is obscured - perhaps deliberately - by the choice of the polar area chart.
+
+It's a fair point. However, what we can't know is what would have happened through 1855 in the absence of the Sanitary Commission. Is there a hint of the same "double peak", with a seasonal cycle, but smaller? Is that evidence for the effect of sanitation improvement?
