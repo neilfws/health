@@ -1,7 +1,7 @@
 Nightingale’s Rose Charts
 ================
 Neil Saunders
-compiled 2021-03-16 21:26:13
+compiled 2021-03-19 08:11:52
 
 -   [Summary](#summary)
 -   [The data](#the-data)

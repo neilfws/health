@@ -73,6 +73,7 @@ Nightingale %>%
   mutate(Cause = gsub(".rate", "", Cause),
          period = ifelse(Date <= as.Date("1855-03-01"), "April 1854 to March 1855", "April 1855 to March 1856"),
          Month = fct_relevel(Month, "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun")) %>% 
+  arrange(desc(Rate)) %>% 
   ggplot(aes(Month, Rate)) + 
   geom_col(aes(fill = Cause), width = 1, position = "identity") + 
   coord_polar() + 
